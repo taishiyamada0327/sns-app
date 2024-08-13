@@ -5,12 +5,13 @@ import { SideMenu } from '../components/SideMenu';
 import { postRepository } from '../repositories/post';
 import { Post } from '../components/Post';
 import { Pagination } from '../components/Pagination';
+import { authRepository } from '../repositories/auth';
 
 function Home() {
   const [content, setContent] = useState('');
   const [posts, setPosts] = useState([]);
   const [page, setPage] = useState(1);
-  const { currentUser } = useContext(SessionContext);
+  const { currentUser, setCurrentUser } = useContext(SessionContext);
   const limit = 5;
 
   useEffect(() => {
@@ -50,12 +51,24 @@ function Home() {
     setPage(nextPage);
   };
 
+  const deletePost = async (postId) => {
+    await postRepository.delete(postId);
+    setPosts(posts.filter((post) => post.id !== postId));
+  };
+
+  const signout = async () => {
+    await authRepository.signout();
+    setCurrentUser(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-[#34D399] p-4">
         <div className="container mx-auto flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">SNS APP</h1>
-          <button className="text-white hover:text-red-600">ログアウト</button>
+          <button onClick={signout} className="text-white hover:text-red-600">
+            ログアウト
+          </button>
         </div>
       </header>
       <div className="container mx-auto mt-6 p-4">
@@ -78,7 +91,7 @@ function Home() {
             </div>
             <div className="mt-4">
               {posts.map((post) => {
-                return <Post key={post.id} post={post} />;
+                return <Post key={post.id} post={post} onDelete={deletePost} />;
               })}
             </div>
             <Pagination
